@@ -1,2 +1,3 @@
 # Hybird_Search_Index
-this is a temp repository for my thesis's design and I will keep updating 
+This is a temp repository for my thesis's design and I will keep updating 
+Thanks for [armon's help](https://github.com/armon/libart)
