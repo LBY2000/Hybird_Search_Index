@@ -89,9 +89,9 @@ int main (int argc, char* argv[])
 		exit(1);
     }
     else{
-	for(int i=0; i<numData; i++)
-	    ifs >> keys[i];
-	ifs.close();
+		for(int i=0; i<numData; i++)
+			ifs >> keys[i];
+		ifs.close();
 		cout << dataset << " is used." << endl;
     }
 #ifndef MULTITHREAD // single-threaded的情况，注意这里是ifndef，即如果没指定-DMULTITHREAD
