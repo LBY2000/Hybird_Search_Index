@@ -8,7 +8,7 @@ At the current stage:<br>
 # Usage
 - To run Extendible Hash you can:
 ```
-$ cd CCEH_DRAM
+$ cd My_CCEH_DRAM
 $ g++ -fPIC -shared -o libexhash.so Extendible_Hash.cpp
 $ sudo cp libexhash.so /usr/lib
 $ g++ -o test test.cpp -lexhash

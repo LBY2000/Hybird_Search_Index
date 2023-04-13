@@ -8,7 +8,8 @@
 #include <thread>
 #include <vector>
 #include <bitset>
-#include "cceh.h"
+#include <string>
+#include "src/CCEH.h"
 using namespace std;
 
 
@@ -26,8 +27,6 @@ void clear_cache() {
 
     delete[] dummy;
 }
-// 这段代码利用创建并以随机访问方式修改dummy数组的元素，以此破坏程序缓存的局部性
-
 
 
 int main (int argc, char* argv[])
@@ -36,72 +35,85 @@ int main (int argc, char* argv[])
 	cerr << "Usage: " << argv[0] << "path numData" << endl;
 	exit(1);
     }
-    const size_t initialSize = 128;   //初始的表目录数量大小
+    const size_t initialSize = 128;
     char path[32];
-    strcpy(path, argv[1]);          //path这里是持久内存设备文件的路径，对应到实验室的就是 /mnt/pmem0等
-    int numData = atoi(argv[2]);   //将读取到的执行数据大小改为int类型  即调用形式应该为 ./test "...(Path)" num
-	
-#ifdef MULTITHREAD        //这个在编译时指定了，所以直接用multi版本的可执行文件即可
-    int numThreads = atoi(argv[3]);   //多线程下还需要知道第三个，线程数参数
+    strcpy(path, argv[1]);
+    int numData = atoi(argv[2]);
+#ifdef MULTITHREAD
+    int numThreads = atoi(argv[3]);
 #endif
     struct timespec start, end;
-    uint64_t elapsed;     //这两个是用来计算延迟的
-    bool exists = false;  //exists表明打开的路径上的持久化文件是否已经存在了，如果存在就是true
-    class CCEH *HashTable=new class CCEH;    //声明持久化的CCEH类，实际上就是CCEH HashTable
-    HashTable->initCCEH(initialSize);
-	//这里注意下崩溃恢复的做法和依据
-	/*
-    if(access(path, 0) != 0){          //如果path路径上的文件没有，就创建
+    uint64_t elapsed;
+    PMEMobjpool* pop;
+    bool exists = false;
+    TOID(CCEH) HashTable = OID_NULL;
+    
+    if(access(path, 0) != 0){
 	pop = pmemobj_create(path, "CCEH", POOL_SIZE, 0666);
 	if(!pop){
 	    perror("pmemoj_create");
 	    exit(1);
-	}     //依据path创建持久化内存文件
-	HashTable = POBJ_ROOT(pop, CCEH);   //利用root解析HashTable的指针
-	D_RW(HashTable)->initCCEH(pop, initialSize);    //D_RW获取HashTable的指针，然后执行自带的initCCEH函数，initialsize指明初始化的目录数大小
+	}
+	HashTable = POBJ_ROOT(pop, CCEH);
+	D_RW(HashTable)->initCCEH(pop, initialSize);
     }
-    else{    //否则就选择打开
+    else{
 	pop = pmemobj_open(path, "CCEH");
 	if(pop == NULL){
 	    perror("pmemobj_open");
 	    exit(1);
 	}
 	HashTable = POBJ_ROOT(pop, CCEH);
-	if(D_RO(HashTable)->crashed){    //打开时，要考虑是否崩溃了
-	    D_RW(HashTable)->Recovery(pop);   //崩溃就恢复
+	if(D_RO(HashTable)->crashed){
+	    D_RW(HashTable)->Recovery(pop);
 	}
 	exists = true;
-    }*/
+    }
 
 #ifdef MULTITHREAD
     cout << "Params: numData(" << numData << "), numThreads(" << numThreads << ")" << endl;
 #else
     cout << "Params: numData(" << numData << ")" << endl;
 #endif
-    uint64_t* keys = new uint64_t[numData];      
+    uint64_t* keys = new uint64_t[numData];
 
     ifstream ifs;
-    string dataset = "/home/byli/CCEH-DRAM/data";
-	cout<<"3"<<endl;
+    string dataset = "/home/byli/CCEH/CCEH-master/CCEH-PMDK/bin/data.txt";
     ifs.open(dataset);
+	string line;
     if (!ifs){
-		cerr << "No file." << endl;
-		exit(1);
+	cerr << "No file." << endl;
+	exit(1);
     }
     else{
-		for(int i=0; i<numData; i++)
-			ifs >> keys[i];
-		ifs.close();
-		cout << dataset << " is used." << endl;
+	for(int i=0; i<numData; i++){
+        //ifs >> keys[i];
+        keys[i]=i;
+		//ifs >> line;
+      //  getline(ifs, keys[i]);
+      /*
+		getline(ifs, line);
+		if(line.empty()){
+			cout<<"line的长度:"<<sizeof(line)<<endl;
+		}else{
+			cout<<"line="<<line<<endl;
+		}
+		*/
+		//keys[i]=(uint64_t*)line;
+	}
+	    
+	ifs.close();
+	cout << dataset << " is used." << endl;
     }
-#ifndef MULTITHREAD // single-threaded的情况，注意这里是ifndef，即如果没指定-DMULTITHREAD
-    if(!exists){  //如果原先的文件存在，就不执行插入操作，否则执行插入操作；但是不管怎么样，都得执行搜索操作
+#ifndef MULTITHREAD // single-threaded
+    if(!exists){
 	{ // INSERT
 	    cout << "Start Insertion" << endl;
-	    clear_cache();
+	  //  clear_cache();
 	    clock_gettime(CLOCK_MONOTONIC, &start);
 	    for(int i=0; i<numData; i++){
-		    HashTable->Insert(keys[i], reinterpret_cast<Value_t>(keys[i]));
+			//cout<<"keys["<<i<<"] = "<<keys[i]<<endl;
+		D_RW(HashTable)->Insert(pop, keys[i], reinterpret_cast<Value_t>(keys[i]));
 	    }
 	    clock_gettime(CLOCK_MONOTONIC, &end);
 
@@ -112,11 +124,11 @@ int main (int argc, char* argv[])
 
     { // SEARCH
 	cout << "Start Searching" << endl;
-	clear_cache();
+	//clear_cache();
 	int failedSearch = 0;
 	clock_gettime(CLOCK_MONOTONIC, &start);
 	for(int i=0; i<numData; i++){
-	    auto ret = HashTable->Get(keys[i]);
+	    auto ret = D_RW(HashTable)->Get(keys[i]);
 	    if(ret != reinterpret_cast<Value_t>(keys[i])){
 		failedSearch++;
 	    }
@@ -132,11 +144,11 @@ int main (int argc, char* argv[])
     vector<thread> searchingThreads;
     int chunk_size = numData/numThreads;
 
-    if(!exists){   //依旧是，如果，假如待打开的持久化文件存在，则不执行插入，否则先执行插入操作；然后最终都执行搜索操作
+    if(!exists){
 	{ // INSERT
-	    auto insert = [&HashTable, &keys](int from, int to){
+	    auto insert = [&pop, &HashTable, &keys](int from, int to){
 		for(int i=from; i<to; i++){
-		    HashTable->Insert(keys[i], reinterpret_cast<Value_t>(keys[i]));
+		    D_RW(HashTable)->Insert(pop, keys[i], reinterpret_cast<Value_t>(keys[i]));
 		}
 	    };
 
@@ -162,10 +174,10 @@ int main (int argc, char* argv[])
 	int failedSearch = 0;
 	vector<int> searchFailed(numThreads);
 
-	auto search = [ &HashTable, &keys, &searchFailed](int from, int to, int tid){
+	auto search = [&pop, &HashTable, &keys, &searchFailed](int from, int to, int tid){
 	    int fail_cnt = 0;
 	    for(int i=from; i<to; i++){
-		auto ret = HashTable->Get(keys[i]);
+		auto ret = D_RW(HashTable)->Get(keys[i]);
 		if(ret != reinterpret_cast<Value_t>(keys[i])){
 		    fail_cnt++;
 		}
@@ -194,20 +206,13 @@ int main (int argc, char* argv[])
     }
 #endif
 
-    auto util = HashTable->Utilization();    //util记录下当前的空间利用率
-    cout << "Utilization: " << util << " %" << endl;   //这里是空间利用率测量
+    auto util = D_RW(HashTable)->Utilization();
+    cout << "Utilization: " << util << " %" << endl;
 
-    HashTable->crashed = false;  //初始的时候，崩溃是true，一直到末尾才设定新值为false，这样，false才能是正常崩溃的标记
-   // pmemobj_persist(pop, (char*)&D_RO(HashTable)->crashed, sizeof(bool));  //持久化标记
-  //  pmemobj_close(pop);  //关闭线程池
+    D_RW(HashTable)->crashed = false;
+    pmemobj_persist(pop, (char*)&D_RO(HashTable)->crashed, sizeof(bool));
+    pmemobj_close(pop);
     return 0;
 } 
-
-
-
-
-
-
-
 
 
