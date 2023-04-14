@@ -1,6 +1,6 @@
 # Hybird_Search_Index
 This is a temp repository for my thesis's design and I will keep updating <br>
-And thanks for [armon's help](https://github.com/armon/libart)(In adaptive radix tree part) <br>
+And thanks for help.
 <br>
 At the current stage:<br>
 - Try CCEH on a single thread.
@@ -37,8 +37,8 @@ $ scons
 ```
 And retry.
 armos's explanation: Building the test code will generate errors if libcheck is not available
-
-Now I fixed several problems in CCEH-PMDK(https://github.com/DICL/CCEH),here I upload CCEH-DRAM
+<br><br>
+- Now I fixed several problems in CCEH-PMDK(https://github.com/DICL/CCEH),here I upload CCEH-DRAM
 ```
 cd CCEH_DRAM
 mkdir bin
@@ -47,7 +47,7 @@ cd bin
 ./single_threaded_cceh 200000
 ./multi_threaded_cceh 200000 10
 ```
-Then I upload CCEH-PMDK(fixed), the original version(https://github.com/DICL/CCEH),but now it's write latency is very high and I still can't figure out why it suffers such high write latency
+- Then I upload CCEH-PMDK(fixed), the original version(https://github.com/DICL/CCEH),but now it's write latency is very high and I still can't figure out why it suffers such high write latency
 ```
 cd CCEH_PMDK
 mkdir bin
