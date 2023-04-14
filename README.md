@@ -18,10 +18,10 @@ $ g++ -o test test.cpp -lexhash
 $ cd ARTree
 $ g++ -fPIC -shared -o libartree.so art.cpp
 $ sudo cp libartree.so /usr/lib
-$  g++ -o input input.cpp
-$ ./input 1000000
+$  g++ -o input input_gen.cpp
+$ ./input 10000000
 $ g++ -o test2 test2.cpp -lartree
-$ ./test2 ./data 20
+$ ./test2 ./data 1000000
 ```
 And if you find the test2 fail to run and you can try:
 ```

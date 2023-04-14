@@ -3,7 +3,21 @@
 #include <string>
 #include <cstring>
 #include <fstream>
+#include <ctime>
+#include <unistd.h>
 using namespace std;
+void clear_cache() {
+    int* dummy = new int[1024*1024*256];
+    for (int i=0; i<1024*1024*256; i++) {
+	dummy[i] = i;
+    }
+
+    for (int i=100;i<1024*1024*256;i++) {
+	dummy[i] = dummy[i-rand()%100] + dummy[i+rand()%100];
+    }
+
+    delete[] dummy;
+}
 
 /*
 int main(int argc,char **argv){
@@ -30,6 +44,8 @@ int main(int argc,char **argv){
       cerr << "Usage: " << argv[0] << " path & numData" << endl;
       exit(1);
     }
+    struct timespec start, end;
+    uint64_t elapsed;
     art_tree *new_art = new art_tree; 
     init_art_tree(new_art);
     char path[32];
@@ -58,14 +74,22 @@ int main(int argc,char **argv){
       cout << path << " is used." << endl;
     }
     cout << "Start Insertion" << endl;
+    clock_gettime(CLOCK_MONOTONIC, &start);
     for(int i=0; i<numData; i++){
 		  art_insert(new_art,(const unsigned char *)keys[i],8,values[i]);
-      cout<<"keys["<<i<<"] is:"<<*keys[i]<<endl;
-      cout<<"values["<<i<<"] is:"<<*values[i]<<endl;
 	  }
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsed = (end.tv_sec - start.tv_sec)*1000000000 + (end.tv_nsec - start.tv_nsec);
+	  cout << elapsed/1000 << "\tusec\t" << (uint64_t)(1000000*(numData/(elapsed/1000.0))) << "\tOps/sec\tInsertion" << endl;
+    //clear_cache();
+    clock_gettime(CLOCK_MONOTONIC, &start);
     for(int i=0;i<numData;i++){
       value_test[i]=(int *)art_search(new_art,(const unsigned char *)keys[i],8);
     }
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsed = (end.tv_sec - start.tv_sec)*1000000000 + (end.tv_nsec - start.tv_nsec);
+	  cout << elapsed/1000 << "\tusec\t" << (uint64_t)(1000000*(numData/(elapsed/1000.0))) << "\tOps/sec\tSearch" << endl;
+
     bool is_true=true;
     for(int i=0;i<numData;i++){
       if(*value_test[i]!=2*i+1){

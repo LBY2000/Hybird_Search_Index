@@ -1,1 +1,1 @@
-目前CCEH文件夹实现了可用的CCEH版本(PMDK)版本
+目前实现了CCEH-DRAM版本，同时修复了CCEH-PMDK运行的一些微小bug，但是仍然不清楚为何CCEH-PMDK会遭受巨大的写延迟
