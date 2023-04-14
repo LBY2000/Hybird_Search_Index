@@ -1,1 +1,1 @@
-目前CCEH文件夹实现了单线程，CoW形式的DRAM版本的CCEH
+目前CCEH文件夹实现了可用的CCEH版本(PMDK)版本
