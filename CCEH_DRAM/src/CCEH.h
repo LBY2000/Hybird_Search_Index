@@ -7,7 +7,6 @@
 #include <vector>
 #include <cstdlib>
 #include <pthread.h>
-#include <libpmemobj.h>
 #include "src/util.h"
 #define TOID_ARRAY(x) TOID(x)
 
@@ -26,12 +25,7 @@ struct Pair{
 class CCEH;
 struct Directory;
 struct Segment;
-POBJ_LAYOUT_BEGIN(HashTable);
-POBJ_LAYOUT_ROOT(HashTable, CCEH);
-POBJ_LAYOUT_TOID(HashTable, struct Directory);
-POBJ_LAYOUT_ROOT(HashTable, struct Segment);
-POBJ_LAYOUT_TOID(HashTable, TOID(struct Segment));
-POBJ_LAYOUT_END(HashTable);
+
 
 constexpr size_t kSegmentBits = 8;
 constexpr size_t kMask = (1 << kSegmentBits)-1;

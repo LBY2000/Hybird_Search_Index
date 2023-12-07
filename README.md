@@ -1,8 +1,12 @@
 # Hybird_Search_Index
 This is a temp repository for my thesis's design and I will keep updating <br>
+
+<font color=red>【Follow-up: Because I changed the subject, I won't update it anymore】<br> </font>
+
 And thanks for help.
 <br>
 At the current stage:<br>
+
 - Try CCEH on a single thread.
 - Try ARTree on a single thread.
 # Usage
